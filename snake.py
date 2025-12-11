@@ -59,7 +59,57 @@ class Game:
 
     def getFeatures(self):
         features = numpy.zeros(8)
-        #TODO
+        
+        # pos
+        x, y = self.serpent[0]
+        fx, fy = self.fruit
+
+        def obstacle(xx, yy):
+            # mur == obstacle?
+            if xx < 0 or xx >= self.largeur or yy < 0 or yy >= self.hauteur:
+                return 1
+            # body snake == obstacle?
+            return 1 if self.grille[xx][yy] == 1 else 0
+
+        # obstacle haut
+        features[0] = obstacle(x, y - 1)
+        # obstacle bas
+        features[1] = obstacle(x, y + 1)
+        # obstacle gauche
+        features[2] = obstacle(x - 1, y)
+        # obstacle droite
+        features[3] = obstacle(x + 1, y)
+
+        # fruit haut, bas ou meme ligne
+        if fy < y:
+            features[4] = 1
+        elif fy > y:
+            features[4] = -1
+        else:
+            features[4] = 0
+
+        # fruit droite, gauche ou meme colonne
+        if fx > x:
+            features[5] = 1
+        elif fx < x:
+            features[5] = -1
+        else:
+            features[5] = 0
+
+        # direction actuelle (0,1,2,3)
+        features[6] = self.direction
+
+        # distance au mur dans la direction actuelle
+        if self.direction == 0:   # haut
+            dist = y
+        elif self.direction == 1: # bas
+            dist = self.hauteur - 1 - y
+        elif self.direction == 2: # gauche
+            dist = x
+        else:                     # droite
+            dist = self.largeur - 1 - x
+
+        features[7] = dist
             
         return features
     
