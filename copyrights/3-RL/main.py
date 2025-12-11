@@ -24,6 +24,7 @@ while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
         pred = np.argmax(nn.compute(game.getFeatures())) #on extrait les features de la partie, et on demande au réseau quelle direction choisir
         game.direction = pred #on joue la direction choisie par le réseau
         game.refresh()
