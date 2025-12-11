@@ -226,4 +226,4 @@ copyrights/**/*.pdf
 *.pth
 *.bin
 *.model
-*model*.txt
+*model*.txt*

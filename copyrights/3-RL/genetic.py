@@ -118,38 +118,41 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
         population.append(indiv)
 
     # genetique loop
-    for it in range(nbIterations):
-        # sort par score 
-        population.sort(key=lambda x: x.score, reverse=True)
+    try:
+        for it in range(nbIterations):
+            # sort par score 
+            population.sort(key=lambda x: x.score, reverse=True)
 
-        # on prend les meilleurs
-        elites = population[:tailleSelection]
+            # on prend les meilleurs
+            elites = population[:tailleSelection]
 
-        # generation des nouveaux individus par crossover + mutation
-        nouveaux = []
-        while len(elites) + len(nouveaux) < taillePopulation:
-            parent1, parent2 = random.sample(elites, 2)
+            # generation des nouveaux individus par crossover + mutation
+            nouveaux = []
+            while len(elites) + len(nouveaux) < taillePopulation:
+                parent1, parent2 = random.sample(elites, 2)
 
-            child1, child2 = crossover(parent1, parent2, pc)
-            mutate(child1, mr)
-            mutate(child2, mr)
+                child1, child2 = crossover(parent1, parent2, pc)
+                mutate(child1, mr)
+                mutate(child2, mr)
 
-            child1.id = next_id
-            next_id += 1
-            child2.id = next_id
-            next_id += 1
+                child1.id = next_id
+                next_id += 1
+                child2.id = next_id
+                next_id += 1
 
-            eval(child1, gameParams)
-            nouveaux.append(child1)
+                eval(child1, gameParams)
+                nouveaux.append(child1)
 
-            if len(elites) + len(nouveaux) < taillePopulation:
-                eval(child2, gameParams)
-                nouveaux.append(child2)
+                if len(elites) + len(nouveaux) < taillePopulation:
+                    eval(child2, gameParams)
+                    nouveaux.append(child2)
 
-        population = elites + nouveaux
+            population = elites + nouveaux
 
-        best = max(population, key=lambda x: x.score)
-        print(f"Iteration {it+1}/{nbIterations} - Best score = {best.score:.4f}")
+            best = max(population, key=lambda x: x.score)
+            print(f"Iteration {it+1}/{nbIterations} - Best score = {best.score:.4f}")
+    except KeyboardInterrupt:
+        print("\nEntrainement interrompu (Ctrl-C)")
 
     # on recup le meilleur individu
     population.sort(key=lambda x: x.score, reverse=True)
