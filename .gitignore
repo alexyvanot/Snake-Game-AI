@@ -217,3 +217,13 @@ __marimo__/
 
 # Copyright files
 copyrights/**/*.pdf
+
+# Model files
+*.h5
+*.hdf5
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.model
+*model*.txt
