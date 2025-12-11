@@ -2,7 +2,7 @@
 Machine Learning Project – Snake Game AI using Genetic Algorithms and Neural Networks
 
 <div align="center">
-  <img src="./src/lib/assets/demo_init.png" alt="Quiz AI Demo" width="300">
+  <img src="./animfull.gif" alt="Snake Game AI" width="300">
 </div>
 
 ### Go to the Jupyter Notebook for full analysis:  
