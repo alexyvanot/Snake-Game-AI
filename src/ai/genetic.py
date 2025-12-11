@@ -1,10 +1,10 @@
 import numpy
-from NN_numpy import *
+from src.ai.NN_numpy import *
 import concurrent.futures
-from snake import *
+from src.core.snake import *
 import random
 import pygame
-from vue import SnakeVue
+from src.gui.vue import SnakeVue
 
 def eval(sol, gameParams):
     sol.score = 0.0

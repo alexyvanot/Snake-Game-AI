@@ -1,15 +1,14 @@
-
 import pygame
 import os
 
-#L'interface graphique, rien n'a complété ici
 class SnakeVue:
     def __init__(self, width, height, scale):
         self.width, self.height, self.scale = width, height, scale
         pygame.init()
         pygame.display.set_caption('Snake')
         self.game_window = pygame.display.set_mode((width*scale, height*scale))
-        self.sheet = pygame.image.load("snake.png").convert()
+        asset_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "snake.png")
+        self.sheet = pygame.image.load(asset_path).convert()
         self.extractSprites()
 
     def extractSprites(self):

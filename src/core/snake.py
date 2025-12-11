@@ -1,7 +1,7 @@
 import random
 import itertools
 import numpy
-from NN_numpy import *
+from src.ai.NN_numpy import *
 
 #Ne pas toucher, cela permet de définir les tailles de couches des réseaux de neurones
 nbFeatures = 8
