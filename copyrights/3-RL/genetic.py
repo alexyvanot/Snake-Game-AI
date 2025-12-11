@@ -3,6 +3,8 @@ from NN_numpy import *
 import concurrent.futures
 from snake import *
 import random
+import pygame
+from vue import SnakeVue
 
 def eval(sol, gameParams):
     sol.score = 0.0
@@ -117,7 +119,10 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
         eval(indiv, gameParams)
         population.append(indiv)
 
-    # genetique loop
+    vue = SnakeVue(gameParams["height"], gameParams["width"], 64)
+    fps = pygame.time.Clock()
+    gameSpeed = 500
+
     try:
         for it in range(nbIterations):
             # sort par score 
@@ -151,6 +156,24 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
 
             best = max(population, key=lambda x: x.score)
             print(f"Iteration {it+1}/{nbIterations} - Best score = {best.score:.4f}")
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    raise KeyboardInterrupt
+
+            demo_game = Game(gameParams["height"], gameParams["width"])
+            while demo_game.enCours:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        raise KeyboardInterrupt
+                features = demo_game.getFeatures()
+                action = int(numpy.argmax(best.nn.compute(features)))
+                demo_game.direction = action
+                demo_game.refresh()
+                if demo_game.enCours:
+                    vue.displayGame(demo_game)
+                    pygame.display.set_caption(f'Score = {len(demo_game.serpent)} | Gen {it+1}/{nbIterations} (Learning...)')
+                    fps.tick(gameSpeed)
     except KeyboardInterrupt:
         print("\nEntrainement interrompu (Ctrl-C)")
 
