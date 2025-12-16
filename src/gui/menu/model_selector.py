@@ -88,7 +88,7 @@ class ModelSelector:
             if meta.created_at:
                 info = f"{meta.grid_size}x{meta.grid_size} | {meta.iterations} iter"
             else:
-                info = "Pas de métadonnées"
+                info = "Pas de metadonnées"
             info_surf = self.small_font.render(info, True, (140, 140, 140))
             screen.blit(info_surf, (item_rect.x + 10, item_rect.y + 18))
         
@@ -136,7 +136,7 @@ class ModelInfoPanel:
         pygame.draw.rect(screen, (70, 70, 70), self.rect, 1, border_radius=5)
         
         if not model:
-            no_sel = self.small_font.render("Sélectionnez un modèle", True, (120, 120, 120))
+            no_sel = self.small_font.render("Sélectionnez un modele", True, (120, 120, 120))
             no_rect = no_sel.get_rect(center=self.rect.center)
             screen.blit(no_sel, no_rect)
             return

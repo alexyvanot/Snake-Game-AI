@@ -1,6 +1,3 @@
-from src.ai.metadata import ModelMetadata
-
-
 class GameStats:
     def __init__(self):
         self.reset()
@@ -15,6 +12,7 @@ class GameStats:
         self.current_game_apples = 0
     
     def load_model_metadata(self, model_filename):
+        from src.ai.metadata import ModelMetadata
         self.model_metadata = ModelMetadata.load(model_filename)
     
     def new_game(self):
@@ -41,3 +39,12 @@ class GameStats:
         if self.games_played == 0:
             return 0.0
         return self.total_apples / self.games_played
+    
+    def get_stats_lines(self):
+        return [
+            f"Parties: {self.games_played}",
+            f"Score: {self.current_score}",
+            f"Pommes: {self.current_game_apples}",
+            f"Meilleur: {self.best_score}",
+            f"Moy pommes: {self.get_avg_apples():.1f}",
+        ]

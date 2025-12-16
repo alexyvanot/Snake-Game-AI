@@ -4,8 +4,7 @@ import concurrent.futures
 from src.core.snake import *
 import random
 import pygame
-from src.gui.vue import SnakeVue
-from src.gui.events import BackToMenuException
+from src.gui.game import SnakeVue, BackToMenuException
 
 
 def process_events(vue, status_text=""):

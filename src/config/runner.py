@@ -3,9 +3,8 @@ import time
 
 def train_model(config):
     from src.core.snake import nbFeatures, nbActions, Game
-    from src.gui.vue import SnakeVue
-    from src.gui.events import BackToMenuException
-    from src.gui.end_training import EndTrainingScreen
+    from src.gui.game import SnakeVue, BackToMenuException
+    from src.gui.training import EndTrainingScreen
     from src.ai import genetic
     from src.ai.metadata import ModelMetadata
     
@@ -66,8 +65,7 @@ def train_model(config):
 
 def play_model(config):
     from src.core.snake import Game
-    from src.gui.vue import SnakeVue
-    from src.gui.events import BackToMenuException
+    from src.gui.game import SnakeVue, BackToMenuException
     from src.ai.NN_numpy import NeuralNet
     import numpy as np
     
