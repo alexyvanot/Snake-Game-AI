@@ -4,7 +4,7 @@ import concurrent.futures
 from src.core.snake import *
 import random
 import pygame
-from src.gui.vue import SnakeVue
+from src.gui.vue import SnakeVue, BackToMenuException
 
 def eval(sol, gameParams):
     sol.score = 0.0
@@ -160,12 +160,14 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     raise KeyboardInterrupt
+                vue.handle_back_button(event)
 
             demo_game = Game(gameParams["height"], gameParams["width"])
             while demo_game.enCours:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         raise KeyboardInterrupt
+                    vue.handle_back_button(event)
                 features = demo_game.getFeatures()
                 action = int(numpy.argmax(best.nn.compute(features)))
                 demo_game.direction = action
