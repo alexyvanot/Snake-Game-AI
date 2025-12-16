@@ -15,7 +15,7 @@ def train_model(config):
     start_time = time.time()
     
     try:
-        nn, best_score = genetic.optimize(
+        nn, best_score, auto_close = genetic.optimize(
             taillePopulation=config["population"],
             tailleSelection=config["selection"],
             pc=config["crossover"],
@@ -32,6 +32,16 @@ def train_model(config):
         metadata.set_performance(best_score, training_time)
         
         pygame.quit()
+        
+        # Si auto_close, sauvegarder et quitter directement
+        if auto_close:
+            model_file = config["model_file"]
+            if not model_file.endswith('.txt'):
+                model_file += '.txt'
+            nn.save(model_file)
+            metadata.save(model_file)
+            print(f"\nModèle sauvegardé automatiquement: {model_file}")
+            return False  # Quitter l'application
         
         end_screen = EndTrainingScreen(nn, config["grid_size"], config["model_file"], metadata)
         result = end_screen.run()

@@ -1,13 +1,16 @@
 import pygame
 import os
-from src.gui.components import BackButton, StatsButton, StatsPanel
+from src.gui.components import BackButton, StatsButton, StatsPanel, Checkbox
 from src.gui.stats import GameStats
 from src.gui.events import BackToMenuException, GameEventHandler
 
 
 class SnakeVue:
-    def __init__(self, width, height, scale, model_file=None):
+    def __init__(self, width, height, scale, model_file=None, is_training=False):
         self.width, self.height, self.scale = width, height, scale
+        self.is_training = is_training
+        self.auto_close = False  # Fermer automatiquement après entraînement
+        
         pygame.init()
         pygame.display.set_caption('Snake')
         self.game_window = pygame.display.set_mode((width*scale, height*scale))
@@ -16,6 +19,7 @@ class SnakeVue:
         self.extractSprites()
         
         self.font = pygame.font.Font(None, 24)
+        self.small_font = pygame.font.Font(None, 20)
         self.back_button = BackButton(10, 10, 90, 30, self.font)
         
         self.stats = GameStats()
@@ -23,6 +27,15 @@ class SnakeVue:
             self.stats.load_model_metadata(model_file)
         self.stats_button = StatsButton(width * scale - 40, 10, 30, self.font)
         self.stats_panel = StatsPanel(width * scale - 170, 50, 160, self.font)
+        
+        # Checkbox auto-close (uniquement en mode training)
+        if is_training:
+            self.auto_close_checkbox = Checkbox(
+                110, 12, 20, self.small_font, 
+                "Fermer auto.", checked=False
+            )
+        else:
+            self.auto_close_checkbox = None
         
         self.event_handler = GameEventHandler(self)
 
@@ -90,6 +103,12 @@ class SnakeVue:
         self.back_button.check_hover(mouse_pos)
         self.back_button.draw(self.game_window)
         
+        # Checkbox auto-close (uniquement en mode training)
+        if self.auto_close_checkbox:
+            self.auto_close_checkbox.check_hover(mouse_pos)
+            self.auto_close_checkbox.draw(self.game_window)
+            self.auto_close = self.auto_close_checkbox.checked
+        
         self.stats_button.check_hover(mouse_pos)
         self.stats_button.draw(self.game_window, self.stats_panel.visible)
         self.stats_panel.draw_stats(self.game_window, self.stats)
@@ -97,6 +116,9 @@ class SnakeVue:
         pygame.display.update()
     
     def handle_events(self, event):
+        # Gérer la checkbox en premier
+        if self.auto_close_checkbox:
+            self.auto_close_checkbox.handle_event(event)
         self.event_handler.handle(event)
     
     def handle_back_button(self, event):

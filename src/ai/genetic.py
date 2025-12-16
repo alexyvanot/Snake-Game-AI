@@ -120,7 +120,7 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
         eval(indiv, gameParams)
         population.append(indiv)
 
-    vue = SnakeVue(gameParams["height"], gameParams["width"], 64)
+    vue = SnakeVue(gameParams["height"], gameParams["width"], 64, is_training=True)
     fps = pygame.time.Clock()
     gameSpeed = 500
 
@@ -181,6 +181,9 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
     except KeyboardInterrupt:
         print("\nEntrainement interrompu (Ctrl-C)")
 
+    # Récupérer l'état auto_close avant de fermer
+    auto_close = vue.auto_close
+
     # on recup le meilleur individu
     population.sort(key=lambda x: x.score, reverse=True)
     best = population[0]
@@ -198,4 +201,4 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
 
     NeuralNet.__init__ = init_with_best
     
-    return NeuralNet(arch), best.score
+    return NeuralNet(arch), best.score, auto_close
