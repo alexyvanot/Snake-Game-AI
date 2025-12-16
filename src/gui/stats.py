@@ -1,6 +1,10 @@
+from src.ai.metadata import ModelMetadata
+
+
 class GameStats:
     def __init__(self):
         self.reset()
+        self.model_metadata = None
     
     def reset(self):
         self.games_played = 0
@@ -9,6 +13,9 @@ class GameStats:
         self.current_score = 0
         self.total_steps = 0
         self.current_game_apples = 0
+    
+    def load_model_metadata(self, model_filename):
+        self.model_metadata = ModelMetadata.load(model_filename)
     
     def new_game(self):
         self.games_played += 1

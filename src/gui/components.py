@@ -112,6 +112,15 @@ class StatsPanel(Panel):
             f"Moy. pommes: {stats.get_avg_apples():.1f}",
             f"Steps total: {stats.total_steps}",
         ]
+        
+        if stats.model_metadata and stats.model_metadata.created_at:
+            lines.append("")
+            lines.append("--- Modèle ---")
+            lines.append(f"Grille: {stats.model_metadata.grid_size}x{stats.model_metadata.grid_size}")
+            lines.append(f"Itérations: {stats.model_metadata.iterations}")
+            lines.append(f"Population: {stats.model_metadata.population}")
+            lines.append(f"Perf: {stats.model_metadata.best_score:.4f}")
+        
         self.draw(screen, lines)
 
 

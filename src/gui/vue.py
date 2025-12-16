@@ -6,7 +6,7 @@ from src.gui.events import BackToMenuException, GameEventHandler
 
 
 class SnakeVue:
-    def __init__(self, width, height, scale):
+    def __init__(self, width, height, scale, model_file=None):
         self.width, self.height, self.scale = width, height, scale
         pygame.init()
         pygame.display.set_caption('Snake')
@@ -19,6 +19,8 @@ class SnakeVue:
         self.back_button = BackButton(10, 10, 90, 30, self.font)
         
         self.stats = GameStats()
+        if model_file:
+            self.stats.load_model_metadata(model_file)
         self.stats_button = StatsButton(width * scale - 40, 10, 30, self.font)
         self.stats_panel = StatsPanel(width * scale - 170, 50, 160, self.font)
         

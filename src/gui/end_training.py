@@ -28,7 +28,7 @@ class MenuButton(Button):
 
 
 class EndTrainingScreen:
-    def __init__(self, nn, grid_size, default_filename="model.txt"):
+    def __init__(self, nn, grid_size, default_filename="model.txt", metadata=None):
         pygame.init()
         self.width, self.height = 500, 400
         self.screen = pygame.display.set_mode((self.width, self.height))
@@ -36,6 +36,7 @@ class EndTrainingScreen:
         
         self.nn = nn
         self.grid_size = grid_size
+        self.metadata = metadata
         self.saved = False
         self.saved_filename = None
         
@@ -77,6 +78,8 @@ class EndTrainingScreen:
             
             if self.save_btn.is_clicked(event) and click and self.file_input.is_valid() and not self.saved:
                 self.nn.save(self.file_input.value)
+                if self.metadata:
+                    self.metadata.save(self.file_input.value)
                 self.saved = True
                 self.saved_filename = self.file_input.value
             
@@ -101,11 +104,11 @@ class EndTrainingScreen:
     def draw(self):
         self.screen.fill((30, 30, 30))
         
-        title = self.title_font.render("Entraînement terminé !", True, (50, 205, 50))
+        title = self.title_font.render("Entrainement terminé", True, (50, 205, 50))
         title_rect = title.get_rect(center=(self.width // 2, 40))
         self.screen.blit(title, title_rect)
         
-        subtitle = self.font.render("Félicitations, votre modèle est prêt.", True, (200, 200, 200))
+        subtitle = self.font.render("Votre modèle est prêt", True, (200, 200, 200))
         subtitle_rect = subtitle.get_rect(center=(self.width // 2, 80))
         self.screen.blit(subtitle, subtitle_rect)
         

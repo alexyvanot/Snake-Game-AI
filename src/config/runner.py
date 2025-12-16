@@ -1,4 +1,5 @@
 import pygame
+import time
 
 def train_model(config):
     from src.core.snake import nbFeatures, nbActions, Game
@@ -6,12 +7,15 @@ def train_model(config):
     from src.gui.events import BackToMenuException
     from src.gui.end_training import EndTrainingScreen
     from src.ai import genetic
+    from src.ai.metadata import ModelMetadata
     
     gameParams = {"nbGames": config["nb_games"], "height": config["grid_size"], "width": config["grid_size"]}
     arch = [nbFeatures, config["hidden_layer"], nbActions]
     
+    start_time = time.time()
+    
     try:
-        nn = genetic.optimize(
+        nn, best_score = genetic.optimize(
             taillePopulation=config["population"],
             tailleSelection=config["selection"],
             pc=config["crossover"],
@@ -21,9 +25,15 @@ def train_model(config):
             nbIterations=config["iterations"]
         )
         
+        training_time = int(time.time() - start_time)
+        
+        metadata = ModelMetadata()
+        metadata.set_training_params(config)
+        metadata.set_performance(best_score, training_time)
+        
         pygame.quit()
         
-        end_screen = EndTrainingScreen(nn, config["grid_size"], config["model_file"])
+        end_screen = EndTrainingScreen(nn, config["grid_size"], config["model_file"], metadata)
         result = end_screen.run()
         
         if result is None or result["action"] == "quit":
@@ -54,7 +64,7 @@ def play_model(config):
     nn = NeuralNet([8, 24, 4])
     nn.load(config["model_file"])
     
-    vue = SnakeVue(config["grid_size"], config["grid_size"], 64)
+    vue = SnakeVue(config["grid_size"], config["grid_size"], 64, config["model_file"])
     fps = pygame.time.Clock()
     
     try:

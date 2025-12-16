@@ -10,6 +10,7 @@ from src.utils.input import (
     get_cursor_position_from_click, delete_char_before,
     delete_char_after, insert_char, move_cursor
 )
+from src.gui.model_selector import ModelSelector, ModelInfoPanel
 
 TOOLTIPS = {
     "model_file": "Nom du fichier .txt où sauvegarder/charger le modèle",
@@ -164,6 +165,11 @@ class ConfigMenu:
         self.launch_btn = Button(200, 640, 200, 50, "LANCER", self.font)
         
         self.create_fields()
+        self.create_model_selector()
+        
+    def create_model_selector(self):
+        self.model_selector = ModelSelector(50, 180, 300, 250, self.font, self.small_font)
+        self.model_info_panel = ModelInfoPanel(370, 180, 180, 250, self.font, self.small_font)
         
     def create_fields(self):
         y_start = 180
@@ -184,15 +190,17 @@ class ConfigMenu:
         ]
         
         self.play_fields = [
-            InputField(field_x, y_start, field_w, 35, "Fichier modèle:", ENV_MODEL_FILE, self.small_font, TOOLTIPS["model_file"], "text"),
-            InputField(field_x, y_start + spacing, field_w, 35, "FPS:", ENV_FPS, self.small_font, TOOLTIPS["fps"], "int"),
-            InputField(field_x, y_start + spacing*2, field_w, 35, "Taille grille:", ENV_GRID_SIZE, self.small_font, TOOLTIPS["grid_size"], "int"),
+            InputField(field_x, y_start + 280, field_w, 35, "FPS:", ENV_FPS, self.small_font, TOOLTIPS["fps"], "int"),
+            InputField(field_x, y_start + 280 + spacing, field_w, 35, "Taille grille:", ENV_GRID_SIZE, self.small_font, TOOLTIPS["grid_size"], "int"),
         ]
     
     def all_fields_valid(self):
-        """Verifie que tous les champs du mode actuel sont valides"""
-        fields = self.train_fields if self.mode == "train" else self.play_fields
-        return all(field.is_valid() for field in fields)
+        if self.mode == "train":
+            return all(field.is_valid() for field in self.train_fields)
+        else:
+            has_model = self.model_selector.get_selected_model() is not None
+            fields_valid = all(field.is_valid() for field in self.play_fields)
+            return has_model and fields_valid
         
     def run(self):
         clock = pygame.time.Clock()
@@ -210,19 +218,29 @@ class ConfigMenu:
                         break
                     elif event.type == pygame.MOUSEBUTTONDOWN:
                         click = True
-                        
-                    fields = self.train_fields if self.mode == "train" else self.play_fields
-                    for field in fields:
-                        field.handle_event(event)
+                    
+                    if self.mode == "train":
+                        for field in self.train_fields:
+                            field.handle_event(event)
+                    else:
+                        self.model_selector.handle_event(event)
+                        for field in self.play_fields:
+                            field.handle_event(event)
                 
                 if not self.running:
                     break
                 
-                fields = self.train_fields if self.mode == "train" else self.play_fields
-                for field in fields:
-                    if field.is_label_hovered(mouse_pos):
-                        self.current_tooltip = field.tooltip
-                        break
+                if self.mode == "train":
+                    for field in self.train_fields:
+                        if field.is_label_hovered(mouse_pos):
+                            self.current_tooltip = field.tooltip
+                            break
+                else:
+                    self.model_selector.check_hover(mouse_pos)
+                    for field in self.play_fields:
+                        if field.is_label_hovered(mouse_pos):
+                            self.current_tooltip = field.tooltip
+                            break
                         
                 self.train_btn.check_hover(mouse_pos)
                 self.play_btn.check_hover(mouse_pos)
@@ -232,6 +250,7 @@ class ConfigMenu:
                     self.mode = "train"
                 elif self.play_btn.is_clicked(mouse_pos, click):
                     self.mode = "play"
+                    self.model_selector.refresh_models()
                 elif self.launch_btn.is_clicked(mouse_pos, click) and self.all_fields_valid():
                     self.running = False
                     self.build_result()
@@ -259,11 +278,12 @@ class ConfigMenu:
                 "hidden_layer": int(self.train_fields[8].value),
             }
         else:
+            selected = self.model_selector.get_selected_model()
             self.result = {
                 "mode": "play",
-                "model_file": self.play_fields[0].value,
-                "fps": int(self.play_fields[1].value),
-                "grid_size": int(self.play_fields[2].value),
+                "model_file": selected["path"],
+                "fps": int(self.play_fields[0].value),
+                "grid_size": int(self.play_fields[1].value),
             }
             
     def draw(self, mouse_pos):
@@ -283,9 +303,16 @@ class ConfigMenu:
         self.train_btn.draw(self.screen)
         self.play_btn.draw(self.screen)
         
-        fields = self.train_fields if self.mode == "train" else self.play_fields
-        for field in fields:
-            field.draw(self.screen, 50)
+        if self.mode == "train":
+            for field in self.train_fields:
+                field.draw(self.screen, 50)
+        else:
+            label = self.small_font.render("Sélectionner un modèle:", True, (200, 200, 200))
+            self.screen.blit(label, (50, 160))
+            self.model_selector.draw(self.screen)
+            self.model_info_panel.draw(self.screen, self.model_selector.get_selected_model())
+            for field in self.play_fields:
+                field.draw(self.screen, 50)
             
         self.launch_btn.draw(self.screen)
         

@@ -9,15 +9,15 @@ if __name__ == "__main__":
         if config:
             run(config)
     else:
-        # Boucle principale avec retour au menu
+        # main loop back to menu
         while True:
             menu = ConfigMenu()
             config = menu.run()
             
             if not config:
-                break  # Quitter si le menu est fermé
+                break
             
             back_to_menu = run(config)
             if not back_to_menu:
-                break  # Quitter si on ne veut pas retourner au menu
+                break
 

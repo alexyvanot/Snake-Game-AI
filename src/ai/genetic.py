@@ -198,4 +198,4 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
 
     NeuralNet.__init__ = init_with_best
     
-    return NeuralNet(arch)
+    return NeuralNet(arch), best.score
