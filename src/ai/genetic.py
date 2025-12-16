@@ -13,7 +13,7 @@ def process_events(vue, status_text=""):
         if event.type == pygame.QUIT:
             raise KeyboardInterrupt
         vue.handle_events(event)
-    # Rafraîchir l'affichage de l'UI
+    # refrshuui
     vue.draw_ui_only(status_text)
 
 
@@ -137,14 +137,14 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
     try:
         for it in range(nbIterations):
             status = f"Generation {it+1}/{nbIterations} - Calcul..."
-            
-            # Traiter les événements pour éviter le freeze
+                
+            # event realtime
             process_events(vue, status)
             
             # sort par score 
             population.sort(key=lambda x: x.score, reverse=True)
             
-            # Mettre à jour les stats d'entraînement pour l'affichage
+            # update affichage stats
             best_current = population[0].score if population else 0
             vue.update_training_stats(it + 1, nbIterations, best_current, taillePopulation, tailleSelection)
 
@@ -155,7 +155,7 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
             nouveaux = []
             nb_to_create = taillePopulation - tailleSelection
             while len(nouveaux) < nb_to_create:
-                # Traiter les événements régulièrement pendant les calculs
+                # event real time
                 progress = len(nouveaux) * 100 // nb_to_create
                 status = f"Gen {it+1}/{nbIterations} - Evaluation {progress}%"
                 process_events(vue, status)
@@ -183,7 +183,7 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
             best = max(population, key=lambda x: x.score)
             print(f"Iteration {it+1}/{nbIterations} - Best score = {best.score:.4f}")
 
-            # Traiter les événements avant la démo
+            # event demo
             process_events(vue, "Lancement demo...")
 
             demo_game = Game(gameParams["height"], gameParams["width"])
@@ -204,24 +204,32 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
     except KeyboardInterrupt:
         print("\nEntrainement interrompu (Ctrl-C)")
 
-    # Récupérer l'état auto_close avant de fermer
+    # recup auto_close avant de fermer
     auto_close = vue.auto_close
 
     # on recup le meilleur individu
-    population.sort(key=lambda x: x.score, reverse=True)
-    best = population[0]
-    print(f"Meilleur score final : {best.score:.4f}")
+    try:
+        population.sort(key=lambda x: x.score, reverse=True)
+        best = population[0]
+        print(f"Meilleur score final : {best.score:.4f}")
+    except (KeyboardInterrupt, IndexError):
+        print("Interruption finale - retour d'un modèle par défaut")
+        return NeuralNet(arch), 0.0, auto_close
 
     # on créé un nn avec les poids du meilleur individu
-    original_init = NeuralNet.__init__
+    try:
+        original_init = NeuralNet.__init__
 
-    def init_with_best(self, layerSizes):
-        original_init(self, layerSizes)
-        # copie des poids et biais du meilleur individu
-        for idx, layer in enumerate(self.layers[1:]):
-            layer.bias = best.nn.layers[idx + 1].bias.copy()
-            layer.weights = best.nn.layers[idx + 1].weights.copy()
+        def init_with_best(self, layerSizes):
+            original_init(self, layerSizes)
+            # copie des poids et biais du meilleur individu
+            for idx, layer in enumerate(self.layers[1:]):
+                layer.bias = best.nn.layers[idx + 1].bias.copy()
+                layer.weights = best.nn.layers[idx + 1].weights.copy()
 
-    NeuralNet.__init__ = init_with_best
-    
-    return NeuralNet(arch), best.score, auto_close
+        NeuralNet.__init__ = init_with_best
+        
+        return NeuralNet(arch), best.score, auto_close
+    except KeyboardInterrupt:
+        print("Interruption lors de la création du modèle final")
+        return NeuralNet(arch), best.score, auto_close
