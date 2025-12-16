@@ -30,6 +30,10 @@ class SnakeVue:
         
         self.stats = GameStats()
         
+        # Charger les métadonnées du modèle en mode preview/play
+        if model_file and not is_training:
+            self.stats.load_model_metadata(model_file)
+        
         if is_training:
             self.auto_close_checkbox = Checkbox(
                 self.back_button.rect.right + 10, 12, 20,
@@ -169,3 +173,7 @@ class SnakeVue:
     
     def new_game(self):
         self.stats.new_game()
+    
+    def update_training_stats(self, generation, total_generations, best_score, population, selection):
+        """Met à jour les stats d'entraînement pour l'affichage dans le panneau"""
+        self.stats.set_training_data(generation, total_generations, best_score, population, selection)

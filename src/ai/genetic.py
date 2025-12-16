@@ -143,6 +143,10 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
             
             # sort par score 
             population.sort(key=lambda x: x.score, reverse=True)
+            
+            # Mettre à jour les stats d'entraînement pour l'affichage
+            best_current = population[0].score if population else 0
+            vue.update_training_stats(it + 1, nbIterations, best_current, taillePopulation, tailleSelection)
 
             # on prend les meilleurs
             elites = population[:tailleSelection]
