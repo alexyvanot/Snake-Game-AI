@@ -7,6 +7,17 @@ import pygame
 from src.gui.vue import SnakeVue
 from src.gui.events import BackToMenuException
 
+
+def process_events(vue, status_text=""):
+    """Traite les événements pygame et rafraîchit l'UI pendant les calculs"""
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            raise KeyboardInterrupt
+        vue.handle_events(event)
+    # Rafraîchir l'affichage de l'UI
+    vue.draw_ui_only(status_text)
+
+
 def eval(sol, gameParams):
     sol.score = 0.0
     
@@ -126,6 +137,11 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
 
     try:
         for it in range(nbIterations):
+            status = f"Generation {it+1}/{nbIterations} - Calcul..."
+            
+            # Traiter les événements pour éviter le freeze
+            process_events(vue, status)
+            
             # sort par score 
             population.sort(key=lambda x: x.score, reverse=True)
 
@@ -134,7 +150,13 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
 
             # generation des nouveaux individus par crossover + mutation
             nouveaux = []
-            while len(elites) + len(nouveaux) < taillePopulation:
+            nb_to_create = taillePopulation - tailleSelection
+            while len(nouveaux) < nb_to_create:
+                # Traiter les événements régulièrement pendant les calculs
+                progress = len(nouveaux) * 100 // nb_to_create
+                status = f"Gen {it+1}/{nbIterations} - Evaluation {progress}%"
+                process_events(vue, status)
+                
                 parent1, parent2 = random.sample(elites, 2)
 
                 child1, child2 = crossover(parent1, parent2, pc)
@@ -149,7 +171,7 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
                 eval(child1, gameParams)
                 nouveaux.append(child1)
 
-                if len(elites) + len(nouveaux) < taillePopulation:
+                if len(nouveaux) < nb_to_create:
                     eval(child2, gameParams)
                     nouveaux.append(child2)
 
@@ -158,10 +180,8 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
             best = max(population, key=lambda x: x.score)
             print(f"Iteration {it+1}/{nbIterations} - Best score = {best.score:.4f}")
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    raise KeyboardInterrupt
-                vue.handle_back_button(event)
+            # Traiter les événements avant la démo
+            process_events(vue, "Lancement demo...")
 
             demo_game = Game(gameParams["height"], gameParams["width"])
             vue.new_game()
@@ -169,7 +189,7 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         raise KeyboardInterrupt
-                    vue.handle_back_button(event)
+                    vue.handle_events(event)
                 features = demo_game.getFeatures()
                 action = int(numpy.argmax(best.nn.compute(features)))
                 demo_game.direction = action

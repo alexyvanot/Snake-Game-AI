@@ -27,6 +27,77 @@ class MenuButton(Button):
         super().__init__(x, y, width, height, font, "Retour au menu", colors, border_colors)
 
 
+class ConfirmExitDialog:
+    """Dialog de confirmation pour quitter sans sauvegarder"""
+    
+    def __init__(self, width, height, font, small_font):
+        self.screen_width = width
+        self.screen_height = height
+        self.font = font
+        self.small_font = small_font
+        self.visible = False
+        
+        dialog_w, dialog_h = 350, 160
+        self.rect = pygame.Rect((width - dialog_w) // 2, (height - dialog_h) // 2, dialog_w, dialog_h)
+        
+        btn_w, btn_h = 100, 35
+        btn_y = self.rect.y + self.rect.height - 50
+        # Bouton quitter en rouge
+        self.quit_btn = Button(
+            self.rect.x + 40, btn_y, btn_w, btn_h, font, "Quitter",
+            {"normal": (120, 50, 50), "hover": (150, 70, 70)},
+            {"normal": (180, 80, 80), "hover": (200, 100, 100)}
+        )
+        self.cancel_btn = Button(
+            self.rect.x + self.rect.width - btn_w - 40, btn_y, btn_w, btn_h, font, "Annuler"
+        )
+    
+    def show(self):
+        self.visible = True
+    
+    def hide(self):
+        self.visible = False
+    
+    def draw(self, screen, mouse_pos):
+        if not self.visible:
+            return
+        
+        # Overlay sombre
+        overlay = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150))
+        screen.blit(overlay, (0, 0))
+        
+        # Dialog box
+        pygame.draw.rect(screen, (45, 45, 45), self.rect, border_radius=10)
+        pygame.draw.rect(screen, (100, 100, 100), self.rect, 2, border_radius=10)
+        
+        # Titre
+        title = self.font.render("Quitter sans sauvegarder ?", True, (255, 180, 100))
+        title_rect = title.get_rect(center=(self.rect.centerx, self.rect.y + 30))
+        screen.blit(title, title_rect)
+        
+        # Message
+        msg = self.small_font.render("Le modele entrainer sera perdu.", True, (200, 200, 200))
+        msg_rect = msg.get_rect(center=(self.rect.centerx, self.rect.y + 65))
+        screen.blit(msg, msg_rect)
+        
+        # Boutons
+        self.quit_btn.check_hover(mouse_pos)
+        self.cancel_btn.check_hover(mouse_pos)
+        self.quit_btn.draw(screen)
+        self.cancel_btn.draw(screen)
+    
+    def handle_click(self, pos):
+        """Retourne 'quit', 'cancel' ou None"""
+        if not self.visible:
+            return None
+        if self.quit_btn.rect.collidepoint(pos):
+            return "quit"
+        if self.cancel_btn.rect.collidepoint(pos):
+            return "cancel"
+        return None
+
+
 class EndTrainingScreen:
     def __init__(self, nn, grid_size, default_filename="model.txt", metadata=None):
         pygame.init()
@@ -49,6 +120,8 @@ class EndTrainingScreen:
         self.preview_btn = PreviewButton(125, 280, 250, 45, self.font)
         self.menu_btn = MenuButton(175, 340, 150, 40, self.font)
         
+        self.confirm_dialog = ConfirmExitDialog(self.width, self.height, self.font, self.small_font)
+        
         self.running = True
         self.result = None
     
@@ -66,11 +139,31 @@ class EndTrainingScreen:
                     break
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     click = True
+                    
+                    # Gérer le dialog de confirmation en priorité
+                    if self.confirm_dialog.visible:
+                        dialog_result = self.confirm_dialog.handle_click(event.pos)
+                        if dialog_result == "quit":
+                            self.running = False
+                            self.result = {"action": "menu"}
+                        elif dialog_result == "cancel":
+                            self.confirm_dialog.hide()
+                        continue
+                
+                # Ne pas traiter les autres events si dialog visible
+                if self.confirm_dialog.visible:
+                    continue
                 
                 self.file_input.handle_event(event)
             
             if not self.running:
                 break
+            
+            # Skip interaction si dialog visible
+            if self.confirm_dialog.visible:
+                self.draw(mouse_pos)
+                clock.tick(60)
+                continue
             
             self.save_btn.check_hover(mouse_pos)
             self.preview_btn.check_hover(mouse_pos)
@@ -92,16 +185,21 @@ class EndTrainingScreen:
                 }
             
             if self.menu_btn.is_clicked(event) and click:
-                self.running = False
-                self.result = {"action": "menu"}
+                if self.saved:
+                    # Déjà sauvegardé, on peut quitter
+                    self.running = False
+                    self.result = {"action": "menu"}
+                else:
+                    # Pas sauvegardé, demander confirmation
+                    self.confirm_dialog.show()
             
-            self.draw()
+            self.draw(mouse_pos)
             clock.tick(60)
         
         pygame.quit()
         return self.result
     
-    def draw(self):
+    def draw(self, mouse_pos):
         self.screen.fill((30, 30, 30))
         
         title = self.title_font.render("Entrainement terminé", True, (50, 205, 50))
@@ -151,5 +249,8 @@ class EndTrainingScreen:
             self.screen.blit(disabled_surf, (125, 280))
         
         self.menu_btn.draw(self.screen)
+        
+        # Dialog de confirmation (par-dessus tout)
+        self.confirm_dialog.draw(self.screen, mouse_pos)
         
         pygame.display.flip()

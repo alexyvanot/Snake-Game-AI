@@ -115,6 +115,36 @@ class SnakeVue:
         
         pygame.display.update()
     
+    def draw_ui_only(self, status_text=""):
+        """Dessine uniquement l'interface (sans le jeu) pendant les calculs"""
+        # Fond noir
+        self.game_window.fill((0, 0, 0))
+        
+        # Message de statut au centre
+        if status_text:
+            text_surf = self.font.render(status_text, True, (150, 150, 150))
+            text_rect = text_surf.get_rect(center=(self.width * self.scale // 2, self.height * self.scale // 2))
+            self.game_window.blit(text_surf, text_rect)
+        
+        mouse_pos = pygame.mouse.get_pos()
+        
+        # Bouton retour
+        self.back_button.check_hover(mouse_pos)
+        self.back_button.draw(self.game_window)
+        
+        # Checkbox auto-close
+        if self.auto_close_checkbox:
+            self.auto_close_checkbox.check_hover(mouse_pos)
+            self.auto_close_checkbox.draw(self.game_window)
+            self.auto_close = self.auto_close_checkbox.checked
+        
+        # Bouton stats
+        self.stats_button.check_hover(mouse_pos)
+        self.stats_button.draw(self.game_window, self.stats_panel.visible)
+        self.stats_panel.draw_stats(self.game_window, self.stats)
+        
+        pygame.display.update()
+    
     def handle_events(self, event):
         # Gérer la checkbox en premier
         if self.auto_close_checkbox:
