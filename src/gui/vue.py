@@ -1,36 +1,8 @@
 import pygame
 import os
-
-
-class BackToMenuException(Exception):
-    """Exception levée pour signaler un retour au menu."""
-    pass
-
-
-class BackButton:
-    """Bouton retour réutilisable pour la vue du jeu."""
-    def __init__(self, x, y, width, height, font):
-        self.rect = pygame.Rect(x, y, width, height)
-        self.font = font
-        self.text = "< Retour"
-        self.hovered = False
-    
-    def draw(self, screen):
-        color = (100, 60, 60) if self.hovered else (70, 40, 40)
-        pygame.draw.rect(screen, color, self.rect, border_radius=5)
-        pygame.draw.rect(screen, (150, 80, 80), self.rect, 2, border_radius=5)
-        text_surf = self.font.render(self.text, True, (255, 255, 255))
-        text_rect = text_surf.get_rect(center=self.rect.center)
-        screen.blit(text_surf, text_rect)
-    
-    def check_hover(self, pos):
-        self.hovered = self.rect.collidepoint(pos)
-        return self.hovered
-    
-    def is_clicked(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            return self.rect.collidepoint(event.pos)
-        return False
+from src.gui.components import BackButton, StatsButton, StatsPanel
+from src.gui.stats import GameStats
+from src.gui.events import BackToMenuException, GameEventHandler
 
 
 class SnakeVue:
@@ -43,9 +15,14 @@ class SnakeVue:
         self.sheet = pygame.image.load(asset_path).convert()
         self.extractSprites()
         
-        # btn retour
         self.font = pygame.font.Font(None, 24)
         self.back_button = BackButton(10, 10, 90, 30, self.font)
+        
+        self.stats = GameStats()
+        self.stats_button = StatsButton(width * scale - 40, 10, 30, self.font)
+        self.stats_panel = StatsPanel(width * scale - 170, 50, 160, self.font)
+        
+        self.event_handler = GameEventHandler(self)
 
     def extractSprites(self):
         self.images_body = []
@@ -105,13 +82,23 @@ class SnakeVue:
                 self.game_window.blit(self.images_body[4], coord)
         pygame.display.set_caption(f'Score = {len(game.serpent)}')
         
-        # draw back btn
-        self.back_button.check_hover(pygame.mouse.get_pos())
+        self.stats.update(game)
+        
+        mouse_pos = pygame.mouse.get_pos()
+        self.back_button.check_hover(mouse_pos)
         self.back_button.draw(self.game_window)
+        
+        self.stats_button.check_hover(mouse_pos)
+        self.stats_button.draw(self.game_window, self.stats_panel.visible)
+        self.stats_panel.draw_stats(self.game_window, self.stats)
         
         pygame.display.update()
     
+    def handle_events(self, event):
+        self.event_handler.handle(event)
+    
     def handle_back_button(self, event):
-        """Vérifie si le bouton retour a été cliqué et lève une exception si c'est le cas."""
-        if self.back_button.is_clicked(event):
-            raise BackToMenuException()
+        self.handle_events(event)
+    
+    def new_game(self):
+        self.stats.new_game()

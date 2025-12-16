@@ -2,7 +2,8 @@ import pygame
 
 def train_model(config):
     from src.core.snake import nbFeatures, nbActions, Game
-    from src.gui.vue import SnakeVue, BackToMenuException
+    from src.gui.vue import SnakeVue
+    from src.gui.events import BackToMenuException
     from src.ai import genetic
     
     gameParams = {"nbGames": config["nb_games"], "height": config["grid_size"], "width": config["grid_size"]}
@@ -27,7 +28,8 @@ def train_model(config):
 
 def play_model(config):
     from src.core.snake import Game
-    from src.gui.vue import SnakeVue, BackToMenuException
+    from src.gui.vue import SnakeVue
+    from src.gui.events import BackToMenuException
     from src.ai.NN_numpy import NeuralNet
     import numpy as np
     
@@ -40,6 +42,7 @@ def play_model(config):
     try:
         while True:
             game = Game(config["grid_size"], config["grid_size"])
+            vue.new_game()
             while game.enCours:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
