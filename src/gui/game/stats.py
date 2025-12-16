@@ -1,5 +1,5 @@
 class GameStats:
-    """Statistiques de jeu en temps réel"""
+    """Statistiques de jeu en temps reel"""
     
     def __init__(self):
         self.reset()
@@ -16,18 +16,20 @@ class GameStats:
         self.current_game_apples = 0
     
     def load_model_metadata(self, model_filename):
-        """Charge les métadonnées d'un modèle (mode preview/play)"""
+        """Charge les metadonnées d'un modele"""
         from src.ai.metadata import ModelMetadata
         self.model_metadata = ModelMetadata.load(model_filename)
     
-    def set_training_data(self, generation, total_generations, best_algo_score, population_size, selection_size):
-        """Met à jour les données d'entraînement (mode training)"""
+    def set_training_data(self, generation, total_generations, best_algo_score, population_size, selection_size, elapsed_time=None, remaining_time=None):
+        """Update les données d'entrainement"""
         self.training_data = {
             "generation": generation,
             "total_generations": total_generations,
             "best_algo_score": best_algo_score,
             "population": population_size,
-            "selection": selection_size
+            "selection": selection_size,
+            "elapsed_time": elapsed_time,
+            "remaining_time": remaining_time
         }
     
     def new_game(self):
@@ -67,13 +69,17 @@ class GameStats:
         
         # Mode training : afficher les infos d'apprentissage
         if self.training_data:
+            from src.utils.time_estimator import TimeEstimator
             lines.append("")
             lines.append("--- Apprentissage ---")
             lines.append(f"Gen: {self.training_data['generation']}/{self.training_data['total_generations']}")
             lines.append(f"Best score: {self.training_data['best_algo_score']:.4f}")
             lines.append(f"Pop: {self.training_data['population']} | Sel: {self.training_data['selection']}")
+            elapsed = TimeEstimator.format_duration(self.training_data.get('elapsed_time'))
+            remaining = TimeEstimator.format_duration(self.training_data.get('remaining_time'))
+            lines.append(f"Ecoulé: {elapsed}")
+            lines.append(f"Restant: {remaining}")
         
-        # Mode preview : afficher les métadonnées du modèle
         elif self.model_metadata and self.model_metadata.created_at:
             lines.append("")
             lines.append("--- Modèle ---")

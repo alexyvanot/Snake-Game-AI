@@ -4,7 +4,8 @@ import concurrent.futures
 from src.core.snake import *
 import random
 import pygame
-from src.gui.game import SnakeVue, BackToMenuException
+from src.gui.game import SnakeVue, BackToMenuException, SaveAndExitException
+from src.utils.time_estimator import TimeEstimator
 
 
 def process_events(vue, status_text=""):
@@ -133,6 +134,10 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
     vue = SnakeVue(gameParams["height"], gameParams["width"], 64, is_training=True)
     fps = pygame.time.Clock()
     gameSpeed = 500
+    
+    # Estimateur de temps
+    time_estimator = TimeEstimator(nbIterations)
+    time_estimator.start()
 
     try:
         for it in range(nbIterations):
@@ -144,9 +149,11 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
             # sort par score 
             population.sort(key=lambda x: x.score, reverse=True)
             
-            # update affichage stats
+            # update affichage stats avec temps estimé
             best_current = population[0].score if population else 0
-            vue.update_training_stats(it + 1, nbIterations, best_current, taillePopulation, tailleSelection)
+            elapsed = time_estimator.get_elapsed()
+            remaining = time_estimator.get_remaining_time()
+            vue.update_training_stats(it + 1, nbIterations, best_current, taillePopulation, tailleSelection, elapsed, remaining)
 
             # on prend les meilleurs
             elites = population[:tailleSelection]
@@ -181,7 +188,13 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
             population = elites + nouveaux
 
             best = max(population, key=lambda x: x.score)
-            print(f"Iteration {it+1}/{nbIterations} - Best score = {best.score:.4f}")
+            
+            # Mettre à jour l'estimateur de temps
+            time_estimator.step(it + 1)
+            
+            # Afficher avec temps restant
+            remaining_str = TimeEstimator.format_duration(time_estimator.get_remaining_time())
+            print(f"Iteration {it+1}/{nbIterations} - Best score = {best.score:.4f} - Restant: {remaining_str}")
 
             # event demo
             process_events(vue, "Lancement demo...")
@@ -201,8 +214,10 @@ def optimize(taillePopulation, tailleSelection, pc, mr, arch, gameParams, nbIter
                     vue.displayGame(demo_game)
                     pygame.display.set_caption(f'Score = {len(demo_game.serpent)} | Gen {it+1}/{nbIterations} (Learning...)')
                     fps.tick(gameSpeed)
-    except KeyboardInterrupt:
-        print("\nEntrainement interrompu (Ctrl-C)")
+    except (KeyboardInterrupt, BackToMenuException):
+        print("\nEntrainement interrompu")
+    except SaveAndExitException:
+        print("\nEntrainement interrompu - sauvegarde demandée")
 
     # recup auto_close avant de fermer
     auto_close = vue.auto_close

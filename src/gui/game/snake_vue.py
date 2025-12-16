@@ -3,7 +3,9 @@ import os
 from src.gui.game.buttons import BackButton, StatsButton
 from src.gui.game.panels import StatsPanel
 from src.gui.game.stats import GameStats
-from src.gui.game.events import BackToMenuException
+from src.gui.game.events import BackToMenuException, SaveAndExitException
+from src.gui.game.dialogs import ConfirmExitPreviewDialog
+from src.gui.training.dialogs import ConfirmExitTrainingDialog
 from src.gui.shared.checkbox import Checkbox
 
 
@@ -39,8 +41,14 @@ class SnakeVue:
                 self.back_button.rect.right + 10, 12, 20,
                 self.small_font, "Fermer auto.", checked=False
             )
+            self.confirm_exit_dialog = ConfirmExitTrainingDialog(
+                width * scale, height * scale, self.font, self.small_font
+            )
         else:
             self.auto_close_checkbox = None
+            self.confirm_exit_dialog = ConfirmExitPreviewDialog(
+                width * scale, height * scale, self.font, self.small_font
+            )
     
     def _extract_sprites(self):
         self.images_body = []
@@ -124,6 +132,10 @@ class SnakeVue:
         self.stats_panel.update(self.stats.get_stats_lines())
         self.stats_panel.draw(self.game_window)
         
+        # Dessiner le dialog de confirmation si visible
+        if self.confirm_exit_dialog:
+            self.confirm_exit_dialog.draw(self.game_window, mouse_pos)
+        
         pygame.display.update()
     
     def draw_ui_only(self, status_text=""):
@@ -151,22 +163,50 @@ class SnakeVue:
         self.stats_panel.update(self.stats.get_stats_lines())
         self.stats_panel.draw(self.game_window)
         
+        # Dessiner le dialog de confirmation si visible
+        if self.confirm_exit_dialog:
+            self.confirm_exit_dialog.draw(self.game_window, mouse_pos)
+        
         pygame.display.update()
     
     def handle_events(self, event):
         if self.auto_close_checkbox:
             self.auto_close_checkbox.handle_click(event.pos if hasattr(event, 'pos') and event.type == pygame.MOUSEBUTTONDOWN else None)
         
+        # Gérer le dialog de confirmation d'abord s'il est visible
+        if self.confirm_exit_dialog and self.confirm_exit_dialog.visible:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                result = self.confirm_exit_dialog.handle_click(event.pos)
+                if result == "save_quit":
+                    raise SaveAndExitException()
+                elif result == "quit":
+                    raise BackToMenuException()
+                elif result == "cancel":
+                    self.confirm_exit_dialog.hide()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.confirm_exit_dialog.hide()
+            return  # Ne pas traiter les autres événements si dialog visible
+        
         if event.type == pygame.QUIT:
-            raise BackToMenuException()
+            if self.confirm_exit_dialog:
+                self.confirm_exit_dialog.show()
+            else:
+                raise BackToMenuException()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.back_button.is_clicked(event.pos):
-                raise BackToMenuException()
+                if self.confirm_exit_dialog:
+                    self.confirm_exit_dialog.show()
+                else:
+                    raise BackToMenuException()
             if self.stats_button.is_clicked(event.pos):
                 self.stats_button.toggle()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                raise BackToMenuException()
+                if self.confirm_exit_dialog:
+                    self.confirm_exit_dialog.show()
+                else:
+                    raise BackToMenuException()
     
     def handle_back_button(self, event):
         self.handle_events(event)
@@ -174,6 +214,6 @@ class SnakeVue:
     def new_game(self):
         self.stats.new_game()
     
-    def update_training_stats(self, generation, total_generations, best_score, population, selection):
+    def update_training_stats(self, generation, total_generations, best_score, population, selection, elapsed_time=None, remaining_time=None):
         """Met à jour les stats d'entraînement pour l'affichage dans le panneau"""
-        self.stats.set_training_data(generation, total_generations, best_score, population, selection)
+        self.stats.set_training_data(generation, total_generations, best_score, population, selection, elapsed_time, remaining_time)

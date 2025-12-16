@@ -2,6 +2,11 @@ class BackToMenuException(Exception):
     pass
 
 
+class SaveAndExitException(Exception):
+    """Exception levée quand l'utilisateur veut sauvegarder et quitter"""
+    pass
+
+
 class GameEventHandler:
     
     @staticmethod
