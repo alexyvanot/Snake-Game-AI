@@ -64,7 +64,7 @@ To run the project locally, follow these steps:
 
 ## Author
 
-Project developed by **alexyanot**  
+Project developed by **Alexy VANOT**  
 As part of the *Machine Learning* academic module
 
 ---
