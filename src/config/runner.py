@@ -4,6 +4,7 @@ def train_model(config):
     from src.core.snake import nbFeatures, nbActions, Game
     from src.gui.vue import SnakeVue
     from src.gui.events import BackToMenuException
+    from src.gui.end_training import EndTrainingScreen
     from src.ai import genetic
     
     gameParams = {"nbGames": config["nb_games"], "height": config["grid_size"], "width": config["grid_size"]}
@@ -20,11 +21,28 @@ def train_model(config):
             nbIterations=config["iterations"]
         )
         
-        nn.save(config["model_file"])
-        print(f"Modèle sauvegardé dans {config['model_file']}")
-        return False  # Ne pas retourner au menu
+        pygame.quit()
+        
+        end_screen = EndTrainingScreen(nn, config["grid_size"], config["model_file"])
+        result = end_screen.run()
+        
+        if result is None or result["action"] == "quit":
+            return False
+        elif result["action"] == "menu":
+            return True
+        elif result["action"] == "preview":
+            preview_config = {
+                "mode": "play",
+                "model_file": result["model_file"],
+                "grid_size": result["grid_size"],
+                "fps": 15
+            }
+            return play_model(preview_config)
+        
+        return False
     except BackToMenuException:
-        return True  # Retourner au menu
+        pygame.quit()
+        return True
 
 def play_model(config):
     from src.core.snake import Game
@@ -58,12 +76,10 @@ def play_model(config):
                 fps.tick(config["fps"])
     except BackToMenuException:
         pygame.quit()
-        return True  # Retourner au menu
+        return True
     except KeyboardInterrupt:
-        pass
-    finally:
         pygame.quit()
-    return False
+        return False
 
 def run(config):
     if config["mode"] == "train":
