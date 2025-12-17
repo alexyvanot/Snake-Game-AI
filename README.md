@@ -56,7 +56,7 @@ To run the project locally, follow these steps:
 
 ## Tech Stack
 
-- [Python 3](https://www.python.org/)
+- [Python 3.13.*](https://www.python.org/)
 - [numpy](https://numpy.org/)
 - [Pygame](https://www.pygame.org/)
 
