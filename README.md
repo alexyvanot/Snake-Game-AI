@@ -1,4 +1,4 @@
-# Machine Learning
+# Snake Game AI - Machine Learning Module
 Machine Learning Project – Snake Game AI using Genetic Algorithms and Neural Networks
 
 <div align="center">
